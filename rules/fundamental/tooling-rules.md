@@ -16,11 +16,16 @@ This document defines the mandatory development workflow, tooling requirements, 
 - **FORBIDDEN**: Never use the deprecated `docker-compose` command (old syntax with hyphen)
 - All compose operations must use the modern Docker CLI integrated command
 
+**Rule 3: Docker Compose Version Attribute**
+- **FORBIDDEN**: Never use the obsolete `version` attribute in Docker Compose files
+- **MANDATORY**: Use modern Docker Compose files without version specification
+- The `version` attribute has been deprecated and is no longer required in current Docker Compose specifications
+
 ## Package Management
 
 ### Python Development
 
-**Rule 3: Python Package Management with Astral UV**
+**Rule 4: Python Package Management with Astral UV**
 - **MANDATORY**: Manage all Python packages using Astral UV with `pyproject.toml`
 - **MANDATORY**: Use `uv sync` for dependency synchronization
 - **FORBIDDEN**: Never use `pip` for package installation or management
@@ -35,13 +40,13 @@ This document defines the mandatory development workflow, tooling requirements, 
 
 ### Frontend Development
 
-**Rule 4: React Package Management**
+**Rule 5: React Package Management**
 - **MANDATORY**: For React projects, use `pnpm` as the package manager
 - **FORBIDDEN**: Never use `npm` for React project dependency management
 - All React dependencies must be managed through pnpm
 - **Lock File**: Use `pnpm-lock.yaml` for dependency locking
 
-**Rule 5: Pre-Build Code Quality Validation**
+**Rule 6: Pre-Build Code Quality Validation**
 
 **Python Projects**:
 - **MANDATORY**: Before building a Python container, run the following commands and fix all issues:
@@ -75,11 +80,11 @@ This document defines the mandatory development workflow, tooling requirements, 
 
 ## Dockerfile Authoring Rules
 
-**Rule 11: Dockerfile = Build Only**
+**Rule 7: Dockerfile = Build Only**
 - **MANDATORY**: The Dockerfile must **only** describe how to **build** the image in the most efficient and smallest way possible.
 - **FORBIDDEN**: Any instruction about **how to run** the container (commands, arguments, environment, ports, volumes, networks, restart policies, replicas, resource limits, etc.) must **only** appear in Docker Compose files.
 - **MANDATORY**: Prefer **multi‑stage builds** to ensure the final image is minimal.
-- **MANDATORY**: Use the **smallest still-supported base image** that satisfies the project’s requirements (e.g., `python:3.12-slim`, `alpine`, `distroless`, `ubi-micro`, etc.), and keep it **recent** to receive security patches.
+- **MANDATORY**: Use the **smallest still-supported base image** that satisfies the project's requirements (e.g., `python:3.12-slim`, `alpine`, `distroless`, `ubi-micro`, etc.), and keep it **recent** to receive security patches.
 - **MANDATORY**: Remove all build-time tools, caches and temporary files in the final stage.
 - **MANDATORY**: Provide a proper `.dockerignore` to keep the build context minimal.
 - **RECOMMENDED**: Use BuildKit features such as `--mount=type=cache` to cache package managers (uv/pip/pnpm) during the build.
@@ -87,9 +92,15 @@ This document defines the mandatory development workflow, tooling requirements, 
 - **RECOMMENDED**: Run as a non-root user in the final stage when possible.
 - **OPTIONAL**: `ENTRYPOINT`/`CMD` can be minimal or omitted; the **effective runtime command must be set in Compose**.
 
+**Rule 8: Multi-stage Dockerfile Syntax**
+- **MANDATORY**: When writing multi-stage Dockerfiles, always use `FROM` and `AS` keywords in **UPPERCASE**
+- **MANDATORY**: Stage names should be descriptive and follow consistent naming conventions
+- **Example**: `FROM node:18-alpine AS builder` (not `from node:18-alpine as builder`)
+- This ensures consistency and follows Docker best practices for multi-stage builds
+
 ## Linting Dockerfiles
 
-**Rule 12: Dockerfiles must pass `hadolint`**
+**Rule 9: Dockerfiles must pass `hadolint`**
 - **MANDATORY**: All Dockerfiles must be linted with **hadolint** locally and in CI.
 - **MANDATORY**: The CI pipeline **must fail** on any `error` **or** `warning` severities.
 - **MANDATORY**: Any rule suppression must be:
@@ -117,12 +128,12 @@ ignored:
 
 ### Frontend Container Deployment
 
-**Rule 6: Frontend Container Deployment**
+**Rule 10: Frontend Container Deployment**
 - **MANDATORY**: Launch frontend applications by rebuilding their Docker image and launching with `docker compose`
 - **FORBIDDEN**: Never use `pnpm run` or any local package manager commands to start frontend applications
 - Frontend must always be containerized and orchestrated through Docker Compose
 
-**Rule 7: Frontend Container Build and Test Process**
+**Rule 11: Frontend Container Build and Test Process**
 - **MANDATORY**: To build and test a new version of a frontend container always use:
   ```bash
   docker compose down FRONTENDNAME
@@ -168,7 +179,7 @@ docker compose logs frontend
 
 ### Centralized Environment Management
 
-**Rule 8: Root-Level Environment Variables Only**
+**Rule 12: Root-Level Environment Variables Only**
 - **MANDATORY**: All environment variables must be stored in the root `.env` file only
 - **FORBIDDEN**: Environment variables in subdirectories (e.g., `frontend/.env`, `src/.env`)
 - **MANDATORY**: Use a single `.env.example` template at the root level
@@ -183,7 +194,7 @@ docker compose logs frontend
 
 ## Database Integration
 
-**Rule 9: Database Configuration**
+**Rule 13: Database Configuration**
 - Place database initialization scripts in `/docker/init-scripts/`
 - Use environment variables for database configuration
 - Implement proper connection pooling
@@ -192,7 +203,7 @@ docker compose logs frontend
 
 ## Testing and Quality Assurance
 
-**Rule 10: Testing Requirements**
+**Rule 14: Testing Requirements**
 - **MANDATORY**: Run all tests in containerized environments
 - Follow testing framework conventions (pytest for Python, Jest for React)
 - Include unit, integration, and end-to-end tests
@@ -230,6 +241,8 @@ docker compose exec e2e pnpm test:e2e
 - **MANDATORY**: Use Docker containers for all deployments
 - **MANDATORY**: Frontend applications must be containerized
 - **MANDATORY**: Use `docker compose` for orchestration
+- **MANDATORY**: Never use obsolete `version` attribute in Docker Compose files
+- **MANDATORY**: Use uppercase `FROM` and `AS` in multi-stage Dockerfiles
 
 **Code Quality**:
 - **MANDATORY**: Run linting before building frontend containers
@@ -252,8 +265,10 @@ docker compose exec e2e pnpm test:e2e
 
 **Development Workflow**:
 - **FORBIDDEN**: Using deprecated `docker-compose` command (use `docker compose`)
+- **FORBIDDEN**: Using obsolete `version` attribute in Docker Compose files
 - **FORBIDDEN**: Running applications outside of containers
 - **FORBIDDEN**: Direct execution of local binaries for production code
+- **FORBIDDEN**: Using lowercase `from` and `as` in multi-stage Dockerfiles
 
 ## Deployment Procedures
 
@@ -369,3 +384,4 @@ pnpm lint
 
 # Run tests
 pnpm test
+```
